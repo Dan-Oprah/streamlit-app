@@ -82,7 +82,7 @@ FUNAAB_FACULTIES = {
 }
 
 # ==========================================
-# SIDEBAR: THEME PREFERENCE & AUTH
+# SIDEBAR: THEME PREFERENCE & STYLING FIX
 # ==========================================
 st.sidebar.title("⚙️ Portal Settings")
 theme_mode = st.sidebar.radio("Owner/User Theme Preference", ["Light Mode (White)", "Dark Mode (Black)"])
@@ -91,12 +91,15 @@ if "Dark Mode" in theme_mode:
     st.markdown("""
         <style>
         .stApp { background-color: #0e1117; color: #ffffff; }
+        /* Fix radio button and text visibility in dark mode */
+        p, span, label, div, .stRadio label { color: #ffffff !important; }
         </style>
     """, unsafe_allow_html=True)
 else:
     st.markdown("""
         <style>
         .stApp { background-color: #ffffff; color: #000000; }
+        p, span, label, div, .stRadio label { color: #000000 !important; }
         </style>
     """, unsafe_allow_html=True)
 
