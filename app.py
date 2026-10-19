@@ -25,7 +25,6 @@ if "leaderboard" not in st.session_state:
         "205045 (Microbio)": 420,
         "205008 (Agric Econ)": 390
     }
-# New state for bookmarks and history tracking
 if "bookmarks" not in st.session_state:
     st.session_state.bookmarks = []
 if "exam_history" not in st.session_state:
@@ -61,15 +60,91 @@ PORTAL_DATA = {
                 {"q": "What is the SI unit of acceleration?", "options": ["m/s", "m/s²", "kg m/s", "Newton"], "ans": "m/s²", "expl": "Acceleration is change in velocity over time."},
             ]
         }
+    },
+    "MTH 101: General Mathematics I": {
+        "Topics": [
+            "Sets, Logic & Algebra",
+            "Sequences and Series",
+            "Trigonometry & Functions"
+        ],
+        "Questions": {
+            "Sets, Logic & Algebra": [
+                {"q": "What is the quadratic formula root determinant value condition for real roots?", "options": ["b² - 4ac >= 0", "b² - 4ac < 0", "b + ac = 0", "None"], "ans": "b² - 4ac >= 0", "expl": "Discriminant must be greater than or equal to zero for real roots."},
+            ]
+        }
     }
 }
 
+# ALL 10 OFFICIAL FUNAAB COLLEGES & DEPARTMENTS
 FUNAAB_FACULTIES = {
-    "COLPHYS (Physical Sciences)": ["Computer Science", "Mathematics", "Statistics", "Physics", "Chemistry"],
-    "COLBIOS (Biological Sciences)": ["Microbiology", "Biochemistry", "Plant Biology", "Zoology"],
-    "COLENG (Engineering)": ["Mechanical Engineering", "Electrical/Electronics", "Civil Engineering", "Mechatronics"],
-    "COLAMRUD (Agricultural Management)": ["Agricultural Economics", "Farm Management"],
-    "COMLEM (Environmental Management)": ["Ecotourism", "Water Resources Management"]
+    "COLAMRUD (College of Agricultural Management and Rural Development)": [
+        "Agricultural Economics and Farm Management", 
+        "Agricultural Extension and Rural Development", 
+        "Agricultural Administration", 
+        "Communication and General Studies"
+    ],
+    "COLANIM (College of Animal Science and Livestock Production)": [
+        "Animal Breeding and Genetics", 
+        "Animal Nutrition", 
+        "Animal Physiology", 
+        "Animal Production and Health", 
+        "Pasture and Range Management"
+    ],
+    "COLBIOS (College of Biological Sciences)": [
+        "Biochemistry", 
+        "Microbiology", 
+        "Applied Zoology", 
+        "Applied Botany"
+    ],
+    "COLENG (College of Engineering)": [
+        "Agricultural and Bio-Resources Engineering", 
+        "Civil Engineering", 
+        "Electrical and Electronics Engineering", 
+        "Mechanical Engineering", 
+        "Mechatronics Engineering"
+    ],
+    "COLERM (College of Environmental Resources Management)": [
+        "Aquaculture and Fisheries Management", 
+        "Environmental Management and Toxicology", 
+        "Forestry and Wildlife Management", 
+        "Water Resources Management and Agrometeorology", 
+        "Geology"
+    ],
+    "COLFHEC (College of Food Science and Human Ecology)": [
+        "Food Science and Technology", 
+        "Home Science and Management", 
+        "Nutrition and Dietetics", 
+        "Food Service and Tourism"
+    ],
+    "COLMAS (College of Management Sciences)": [
+        "Accounting", 
+        "Banking and Finance", 
+        "Business Administration", 
+        "Economics", 
+        "Entrepreneurship Studies"
+    ],
+    "COLPHYS (College of Physical Sciences)": [
+        "Computer Science", 
+        "Mathematics", 
+        "Statistics", 
+        "Physics", 
+        "Chemistry"
+    ],
+    "COLPLANT (College of Plant Science and Crop Production)": [
+        "Crop Protection", 
+        "Horticulture", 
+        "Plant Breeding and Seed Technology", 
+        "Plant Physiology and Crop Production", 
+        "Soil Science and Land Management"
+    ],
+    "COLVET (College of Veterinary Medicine)": [
+        "Veterinary Anatomy", 
+        "Veterinary Physiology & Pharmacology", 
+        "Veterinary Pathology", 
+        "Veterinary Microbiology & Parasitology", 
+        "Veterinary Medicine & Surgery", 
+        "Veterinary Public Health & Reproduction"
+    ]
 }
 
 # ==========================================
@@ -78,7 +153,6 @@ FUNAAB_FACULTIES = {
 st.sidebar.title("⚙️ Portal Settings")
 theme_mode = st.sidebar.radio("Owner/User Theme Preference", ["Light Mode (White)", "Dark Mode (Black)"])
 
-# Apply styling based on theme choice
 if "Dark Mode" in theme_mode:
     st.markdown("""
         <style>
@@ -119,6 +193,8 @@ def auth_sidebar():
                         st.session_state.registration_counter += 1
                         serial_id = f"2050{str(st.session_state.registration_counter)[-3:]}"
                         
+                        is_owner = (reg_email.strip().lower() == "oreoluwadaniel126@gmail.com")
+                        
                         st.session_state.users[reg_email] = {
                             "password": reg_pass,
                             "college": col_picked,
@@ -127,9 +203,9 @@ def auth_sidebar():
                             "dob": str(dob_picked),
                             "target_cgpa": target_cgpa,
                             "serial_number": serial_id,
-                            "access_verified": False,
+                            "access_verified": True if is_owner else False,
                             "unlocked_bonus": False,
-                            "role": "owner" if reg_email == "amenadmin@funaab.edu.ng" else "student"
+                            "role": "owner" if is_owner else "student"
                         }
                         st.sidebar.success(f"Registered! Your Serial ID is {serial_id}. Please login.")
                 else:
@@ -152,6 +228,7 @@ def auth_sidebar():
         st.sidebar.write(f"👤 **Logged in:** {st.session_state.current_user}")
         st.sidebar.write(f"🔢 **Serial ID:** `{user_info['serial_number']}`")
         st.sidebar.write(f"🎯 **Target CGPA:** {user_info['target_cgpa']}")
+        st.sidebar.write(f"🛡️ **Role:** {user_info['role'].upper()}")
         
         if st.sidebar.button("Log Out"):
             st.session_state.current_user = None
@@ -172,22 +249,27 @@ if st.session_state.current_user is None:
 else:
     current_user_data = st.session_state.users[st.session_state.current_user]
     
-    # PAYMENT GATEWAY (₦1,500 Full Access)
     if not current_user_data["access_verified"]:
         st.warning("🔒 **Portal Locked: Full Access Fee (₦1,500)**")
-        st.write("Get lifetime access to **all courses**, Exam Simulation Mode, AI Voice reader, Daily Challenges, Leaderboard, GPA Calculator, and new Analytics features.")
+        st.write("To unlock lifetime access to all courses, Exam Simulation Mode, AI Voice reader, and Leaderboard:")
+        st.markdown("""
+        ### 💳 How to Pay:
+        1. Transfer **₦1,500** to the official account below:
+           * **Account Number:** `07082043778`
+           * **Bank:** OPay / Moniepoint (Amen School Portal)
+        2. Send your payment receipt and your Serial ID on WhatsApp to the admin to get your 6-digit activation code.
+        """)
         
-        entered_code = st.text_input("Enter your 6-digit access code (Gotten after paying ₦1,500 via WhatsApp/Transfer):")
+        entered_code = st.text_input("Enter your 6-digit access code:")
         if st.button("Verify Access Code"):
-            if entered_code == "AMEN2050": # Demo passcode
+            if entered_code == "AMEN2050":
                 current_user_data["access_verified"] = True
                 st.success("🎉 Access Verified! Welcome to the premium portal.")
                 st.rerun()
             else:
-                st.error("Invalid access code. Message admin on WhatsApp to secure your code.")
+                st.error("Invalid access code. Please contact admin after payment.")
         st.stop()
 
-    # --- TABS INCLUDING NEW REASONABLE FEATURES ---
     if current_user_data["role"] == "owner":
         tabs = st.tabs(["📚 CBT Portal", "⏱️ Exam Mode", "📊 Analytics & Bookmarks", "🌍 Daily & Leaderboard", "🧮 GPA Calculator", "🤖 AI & Voice", "🎁 Share & Unlock", "👑 Owner Zone"])
     else:
@@ -215,7 +297,6 @@ else:
                 percentage = (score / len(questions_pool)) * 100
                 st.success(f"Score: {score} / {len(questions_pool)} ({percentage:.1f}%)")
                 
-                # Save result to exam history for analytics
                 st.session_state.exam_history.append({
                     "Course": selected_course,
                     "Topic": selected_topic,
@@ -224,7 +305,6 @@ else:
 
                 for idx, q in enumerate(questions_pool):
                     st.info(f"💡 **Explanation for Q{idx+1}:** {q['expl']}")
-                    # Option to bookmark tough questions
                     if st.button(f"Bookmark Q{idx+1}", key=f"bm_{idx}"):
                         if q['q'] not in st.session_state.bookmarks:
                             st.session_state.bookmarks.append(q['q'])
@@ -242,23 +322,20 @@ else:
         if st.button("Start 30-Minute Exam Simulation"):
             st.warning("⚠️ Exam Session Active! Timer is ticking...")
             timer_placeholder = st.empty()
-            for seconds_left in range(15, 0, -1): # Accelerated for smooth testing
+            for seconds_left in range(15, 0, -1):
                 timer_placeholder.markdown(f"⏳ **Time Remaining:** 29 mins {seconds_left} secs")
                 time.sleep(0.1)
             st.error("⏰ Time's up! Exam auto-submitted.")
 
-    # --- TAB 3: NEW ANALYTICS & BOOKMARKS ---
+    # --- TAB 3: ANALYTICS & BOOKMARKS ---
     with tabs[2]:
         st.header("📊 Student Analytics & Bookmarked Questions")
-        
         col1, col2 = st.columns(2)
         with col1:
             st.subheader("📈 Past Test History")
             if st.session_state.exam_history:
                 df_history = pd.DataFrame(st.session_state.exam_history)
                 st.dataframe(df_history, use_container_width=True)
-                
-                # Download report feature
                 csv_data = df_history.to_csv(index=False).encode('utf-8')
                 st.download_button(
                     label="📥 Download Performance Report (CSV)",
@@ -278,7 +355,7 @@ else:
                     st.session_state.bookmarks = []
                     st.rerun()
             else:
-                st.info("No questions bookmarked yet. Click 'Bookmark' during practice sessions.")
+                st.info("No questions bookmarked yet.")
 
     # --- TAB 4: DAILY CHALLENGE & LEADERBOARD ---
     with tabs[3]:
@@ -344,5 +421,4 @@ else:
             
             st.subheader("📋 Registered Users Log:")
             for email, details in st.session_state.users.items():
-                st.write(f"• **Email:** {email} | **Serial:** `{details['serial_number']}` | **College:** {details['college']} | **Paid:** {details['access_verified']}")
-
+                st.write(f"• **Email:** {email} | **Serial:** `{details['serial_number']}` | **College:** {details['college']} | **Dept:** {details['department']} | **Paid:** {details['access_verified']}")
